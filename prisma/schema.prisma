@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model League {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isProtected Boolean  @default(false)
+  pinHash     String?
+  adminCode   String   @default("1234") // Secure code for admin verification
+  creatorId   String
+  status      String   @default("PENDING") // PENDING, ACTIVE, COMPLETED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  teams       Team[]
+  matches     Match[]
+}
+
+model Team {
+  id           String   @id @default(cuid())
+  name         String
+  leagueId     String
+  league       League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  played       Int      @default(0)
+  wins         Int      @default(0)
+  draws        Int      @default(0)
+  losses       Int      @default(0)
+  points       Int      @default(0)
+  goalsFor     Int      @default(0)
+  goalsAgainst Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  homeMatches Match[] @relation("HomeMatches")
+  awayMatches Match[] @relation("AwayMatches")
+}
+
+model Match {
+  id          String   @id @default(cuid())
+  leagueId    String
+  league      League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  matchDay    Int
+  homeTeamId  String
+  homeTeam    Team     @relation("HomeMatches", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  awayTeamId  String
+  awayTeam    Team     @relation("AwayMatches", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  homeScore   Int?
+  awayScore   Int?
+  status      String   @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, FINISHED
+  isKnockout  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
