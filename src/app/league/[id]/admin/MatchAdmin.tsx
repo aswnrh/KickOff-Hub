@@ -6,6 +6,7 @@ import { CheckCircle2, Circle } from "lucide-react";
 import { useToast } from "@/components/Toast";
 import { getCatalogTeamByName } from "@/lib/teamCatalog";
 import Image from "next/image";
+import { publishLeagueUpdate } from "@/lib/leagueLiveSync";
 
 interface MatchItem {
   id: string;
@@ -49,6 +50,7 @@ export default function MatchAdmin({ leagueId, initialMatches, teams }: { league
       const res = await updateMatchScore(matchId, leagueId, homeScore, awayScore, status);
       if (res?.success) {
         setMatches(prev => prev.map(m => m.id === matchId ? { ...m, homeScore, awayScore, status } : m));
+        publishLeagueUpdate(leagueId);
         if (status === "FINISHED") showToast("Match finished and standings updated.");
         else showToast("Score updated.");
       } else if (res?.error) {

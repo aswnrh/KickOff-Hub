@@ -9,6 +9,7 @@ import { useToast } from "@/components/Toast";
 import StandingsTable from "@/components/StandingsTable";
 import MatchAdmin from "./MatchAdmin";
 import { TEAM_CATALOG } from "@/lib/teamCatalog";
+import { publishLeagueUpdate } from "@/lib/leagueLiveSync";
 
 type Tab = "TEAMS" | "SCORING" | "STANDINGS";
 const ADMIN_PIN_REGEX = /^\d{4}$/;
@@ -75,6 +76,7 @@ export default function AdminClient({
         showToast(`Added ${res.added ?? selectedTeams.length} team(s) successfully!`);
         formRef.current?.reset();
         setSelectedTeams([]);
+        publishLeagueUpdate(leagueId);
         router.refresh();
       }
     });
@@ -86,6 +88,7 @@ export default function AdminClient({
       if (res?.error) showToast(res.error, "error");
       else {
         showToast("Team removed.");
+        publishLeagueUpdate(leagueId);
         router.refresh();
       }
     });
@@ -105,6 +108,7 @@ export default function AdminClient({
       else {
         showToast("Schedule generated successfully!");
         setActiveTab("SCORING");
+        publishLeagueUpdate(leagueId);
         router.refresh();
       }
     });
