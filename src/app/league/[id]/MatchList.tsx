@@ -41,11 +41,15 @@ export default function MatchList({ leagueId, initialMatches, teams }: { leagueI
     const onVisible = () => {
       if (document.visibilityState === "visible") refresh();
     };
+    const intervalId = window.setInterval(() => {
+      refresh();
+    }, 5000);
     document.addEventListener("visibilitychange", onVisible);
     const unsubscribe = subscribeLeagueUpdates(leagueId, refresh);
     return () => {
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(intervalId);
       unsubscribe();
     };
   }, [leagueId, refresh]);
