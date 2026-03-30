@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, Users } from "lucide-react";
 import { verifyAdmin } from "@/app/actions/admin";
@@ -11,14 +11,36 @@ import styles from "@/app/page.module.css";
 type JoinMode = "viewer" | "admin";
 const LEAGUE_CODE_REGEX = /^[A-Z]{6}$/;
 const ADMIN_PIN_REGEX = /^\d{4}$/;
+const STORAGE_JOIN_MODE = "kickoff:join-mode";
+const STORAGE_LEAGUE_CODE = "kickoff:last-league-code";
 
 export default function JoinLeagueCard() {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [joinMode, setJoinMode] = useState<JoinMode>("viewer");
-  const [leagueId, setLeagueId] = useState("");
+  const [joinMode, setJoinMode] = useState<JoinMode>(() => {
+    if (typeof window === "undefined") return "viewer";
+    const savedMode = localStorage.getItem(STORAGE_JOIN_MODE);
+    return savedMode === "admin" ? "admin" : "viewer";
+  });
+  const [leagueId, setLeagueId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const savedLeagueCode = localStorage.getItem(STORAGE_LEAGUE_CODE);
+    return savedLeagueCode ? savedLeagueCode.toUpperCase().slice(0, 6) : "";
+  });
   const [adminCode, setAdminCode] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_JOIN_MODE, joinMode);
+  }, [joinMode]);
+
+  useEffect(() => {
+    if (leagueId) {
+      localStorage.setItem(STORAGE_LEAGUE_CODE, leagueId.toUpperCase().slice(0, 6));
+    } else {
+      localStorage.removeItem(STORAGE_LEAGUE_CODE);
+    }
+  }, [leagueId]);
 
   const handleViewerJoin = () => {
     const trimmedLeagueId = leagueId.trim().toUpperCase();

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getCatalogTeamByName } from "@/lib/teamCatalog";
 import Image from "next/image";
+import { subscribeLeagueUpdates } from "@/lib/leagueLiveSync";
 
 interface MatchItem {
   id: string;
@@ -37,16 +38,17 @@ export default function MatchList({ leagueId, initialMatches, teams }: { leagueI
 
   useEffect(() => {
     window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", () => {
+    const onVisible = () => {
       if (document.visibilityState === "visible") refresh();
-    });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const unsubscribe = subscribeLeagueUpdates(leagueId, refresh);
     return () => {
       window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
+      unsubscribe();
     };
-  }, [refresh]);
-
-  // Suppress unused variable warning for leagueId (kept for API compatibility)
-  void leagueId;
+  }, [leagueId, refresh]);
 
   // Group matches by MatchDay
   const matchDays = matches.reduce((acc, match) => {
